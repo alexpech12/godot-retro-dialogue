@@ -1,0 +1,38 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://images/ui_border.png" type="Texture" id=1]
+[ext_resource path="res://images/Pixel Portraits/female_10_t.png" type="Texture" id=2]
+
+[node name="DialogueUI" type="Control"]
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="PortraitRect" type="NinePatchRect" parent="."]
+margin_top = 160.0
+margin_right = 64.0
+margin_bottom = 224.0
+texture = ExtResource( 1 )
+patch_margin_left = 8
+patch_margin_top = 8
+patch_margin_right = 8
+patch_margin_bottom = 8
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Portrait" type="Sprite" parent="PortraitRect"]
+position = Vector2( 32, 32 )
+scale = Vector2( 2, 2 )
+texture = ExtResource( 2 )
+
+[node name="DialogueRect" type="NinePatchRect" parent="."]
+margin_left = 64.0
+margin_top = 160.0
+margin_right = 256.0
+margin_bottom = 224.0
+texture = ExtResource( 1 )
+patch_margin_left = 8
+patch_margin_top = 8
+patch_margin_right = 8
+patch_margin_bottom = 8
