@@ -11,22 +11,25 @@ var conversation = [
     "choices": [
       {
         "dialogue": "Sure do!",
-        "destination": 1
+        "destination": "apples_good"
       },
       {
         "dialogue": "No way, gross!",
-        "destination": 2
+        "destination": "apples_bad"
       }
       ]
   },
   {
+    "label": "apples_good",
     "dialogue": "You like apples? Me too!",
-    "destination": 3
+    "destination": "part_2"
   },
   {
+    "label": "apples_bad",
     "dialogue": "You don't?\nThat's a shame."
   },
   {
+    "label": "part_2",
     "dialogue": "I like other fruits too."
   },
   {
@@ -45,18 +48,30 @@ func _ready():
 func _process(delta):
   if current_index < (conversation.size() - 1):
     var previous_index = current_index
+    var destination = null
     
     if conversation[current_index].has("choices"):
       if Input.is_action_just_pressed("ui_up"):
-        current_index = conversation[current_index]["choices"][0]["destination"]
+        destination = conversation[current_index]["choices"][0]["destination"]
         
       if Input.is_action_just_pressed("ui_down"):
-        current_index = conversation[current_index]["choices"][1]["destination"]
+        destination = conversation[current_index]["choices"][1]["destination"]
       
     if Input.is_action_just_pressed("ui_accept"):
-      current_index = conversation[current_index].get(
-        "destination", current_index + 1
-      )
+      destination = conversation[current_index].get("destination", false)
+    
+    if destination != null:
+      if destination:
+        current_index = get_index_of_label(destination)
+      else:
+        current_index += 1
     
     if current_index != previous_index:
       dialogue_node.text = conversation[current_index]["dialogue"]
+
+func get_index_of_label(label):
+  for i in range(conversation.size()):
+    if conversation[i].get("label") == label:
+      return i
+  
+  assert(false, "Label %s does not exist in this conversation!" % label)
