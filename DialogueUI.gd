@@ -4,6 +4,8 @@ onready var name_node = get_node("DialogueRect/CharacterName")
 onready var dialogue_node = get_node("DialogueRect/Dialogue")
 onready var choice_a_node = get_node("DialogueRect/ChoiceA")
 onready var choice_b_node = get_node("DialogueRect/ChoiceB")
+onready var select_a_node = get_node("DialogueRect/SelectA")
+onready var select_b_node = get_node("DialogueRect/SelectB")
 
 var conversation = [
   {
@@ -42,23 +44,24 @@ var current_choice = 0
 
 func _ready():
   update_text_labels()
+  update_select_indicators()
 
 func _process(delta):
   if current_index < (conversation.size() - 1):
     var previous_index = current_index
     
-    if conversation[current_index].has("choices"):
-      if Input.is_action_just_pressed("ui_up"):
-        current_choice -= 1
-        
-      if Input.is_action_just_pressed("ui_down"):
-        current_choice += 1
+    if Input.is_action_just_pressed("ui_up"):
+      safe_select_previous_choice()
+      
+    if Input.is_action_just_pressed("ui_down"):
+      safe_select_next_choice()
       
     if Input.is_action_just_pressed("ui_accept"):
       current_index = get_next_index()
   
     if current_index != previous_index:
       update_text_labels()
+      reset_selection()
 
 func get_next_index():
   var destination = null
@@ -92,3 +95,32 @@ func update_text_labels():
   dialogue_node.text = conversation[current_index]["dialogue"]
   choice_a_node.text = get_current_choice(0).get("dialogue", "...")
   choice_b_node.text = get_current_choice(1).get("dialogue", "")
+  
+func update_select_indicators():
+  var select_nodes = [
+    select_a_node,
+    select_b_node
+  ]
+  for node in select_nodes:
+    node.visible = false
+    
+  select_nodes[current_choice].visible = true
+  
+func get_current_choice_count():
+  var choices = conversation[current_index].get("choices")
+  if choices:
+    return choices.size()
+  else:
+    return 1
+
+func safe_select_previous_choice():
+  current_choice = clamp(current_choice - 1, 0, get_current_choice_count() - 1)
+  update_select_indicators()
+  
+func safe_select_next_choice():
+  current_choice = clamp(current_choice + 1, 0, get_current_choice_count() - 1)
+  update_select_indicators()
+  
+func reset_selection():
+  current_choice = 0
+  update_select_indicators()
