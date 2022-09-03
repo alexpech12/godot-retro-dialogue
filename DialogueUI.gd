@@ -46,7 +46,6 @@ func _ready():
 func _process(delta):
   if current_index < (conversation.size() - 1):
     var previous_index = current_index
-    var destination = null
     
     if conversation[current_index].has("choices"):
       if Input.is_action_just_pressed("ui_up"):
@@ -56,20 +55,23 @@ func _process(delta):
         current_choice += 1
       
     if Input.is_action_just_pressed("ui_accept"):
-        if conversation[current_index].has("choices"):
-          var choice = conversation[current_index]["choices"][current_choice]
-          destination = choice.get("destination", false)
-        else:
-          destination = conversation[current_index].get("destination", false)
-    
-    if destination != null:
-      if destination:
-        current_index = get_index_of_label(destination)
-      else:
-        current_index += 1
-    
+      current_index = get_next_index()
+  
     if current_index != previous_index:
       update_text_labels()
+
+func get_next_index():
+  var destination = null
+  if conversation[current_index].has("choices"):
+    var choice = conversation[current_index]["choices"][current_choice]
+    destination = choice.get("destination")
+  else:
+    destination = conversation[current_index].get("destination")
+    
+  if destination:
+    return get_index_of_label(destination)
+  else:
+    return current_index + 1
 
 func get_index_of_label(label):
   for i in range(conversation.size()):
