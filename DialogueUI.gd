@@ -40,10 +40,7 @@ var conversation = [
 var current_index = 0
 
 func _ready():
-  name_node.text = "ALEX"
-  dialogue_node.text = conversation[current_index]["dialogue"]
-  choice_a_node.text = "Sure do!"
-  choice_b_node.text = "No way, gross!"
+  update_text_labels()
 
 func _process(delta):
   if current_index < (conversation.size() - 1):
@@ -67,7 +64,7 @@ func _process(delta):
         current_index += 1
     
     if current_index != previous_index:
-      dialogue_node.text = conversation[current_index]["dialogue"]
+      update_text_labels()
 
 func get_index_of_label(label):
   for i in range(conversation.size()):
@@ -75,3 +72,16 @@ func get_index_of_label(label):
       return i
   
   assert(false, "Label %s does not exist in this conversation!" % label)
+  
+func get_current_choice(choice_index):
+  var choices = conversation[current_index].get("choices", [])
+  if choice_index < choices.size():
+    return choices[choice_index]
+  else:
+    return {}
+    
+func update_text_labels():
+  name_node.text = "ALEX"
+  dialogue_node.text = conversation[current_index]["dialogue"]
+  choice_a_node.text = get_current_choice(0).get("dialogue", "...")
+  choice_b_node.text = get_current_choice(1).get("dialogue", "")
