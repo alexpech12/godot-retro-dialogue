@@ -38,6 +38,7 @@ var conversation = [
   ]
 
 var current_index = 0
+var current_choice = 0
 
 func _ready():
   update_text_labels()
@@ -49,13 +50,17 @@ func _process(delta):
     
     if conversation[current_index].has("choices"):
       if Input.is_action_just_pressed("ui_up"):
-        destination = conversation[current_index]["choices"][0]["destination"]
+        current_choice -= 1
         
       if Input.is_action_just_pressed("ui_down"):
-        destination = conversation[current_index]["choices"][1]["destination"]
+        current_choice += 1
       
     if Input.is_action_just_pressed("ui_accept"):
-      destination = conversation[current_index].get("destination", false)
+        if conversation[current_index].has("choices"):
+          var choice = conversation[current_index]["choices"][current_choice]
+          destination = choice.get("destination", false)
+        else:
+          destination = conversation[current_index].get("destination", false)
     
     if destination != null:
       if destination:
