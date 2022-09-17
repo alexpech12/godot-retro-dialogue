@@ -23,7 +23,21 @@ onready var text_timer_node = get_node("TextTimer")
 var conversation = [
   {
     "character": "alex",
-    "dialogue": "Hey there.\nDo you like [wave amp=10 freq=-10][color=green]apples[/color][/wave]?",
+    "dialogue": "Hi, I'm ALEX. How should I refer to you?",
+    "choices": [
+      {
+        "dialogue": "Call me FRIEND",
+        "call": ["set", "title", "FRIEND"]
+      },
+      {
+        "dialogue": "It's CAPTAIN to you",
+        "call": ["set", "title", "CAPTAIN"]
+      }
+    ]
+  },
+  {
+    "character": "alex",
+    "dialogue": "Hey {title}.\nDo you like [wave amp=10 freq=-10][color=green]apples[/color][/wave]?",
     "choices": [
       {
         "dialogue": "[wave amp=10 freq=10]Sure do![/wave]",
@@ -70,6 +84,8 @@ var current_choice = 0
 var text_in_progress = false
 var skip_text_printing = false
 
+var title = "STRANGER"
+
 func _ready():
   print_dialogue(conversation[current_index]["dialogue"])
 
@@ -90,6 +106,7 @@ func _process(delta):
       safe_select_next_choice()
       
     if Input.is_action_just_pressed("ui_accept"):
+      execute_current_choice()
       current_index = get_next_index()
   
     if current_index != previous_index:
@@ -182,7 +199,7 @@ func print_dialogue( dialogue ):
   update_character()
   hide_choices()
   
-  dialogue_node.bbcode_text = dialogue
+  dialogue_node.bbcode_text = dialogue.format({ "title": title })
   dialogue_node.visible_characters = 0
 
   yield(get_tree(),"idle_frame")
@@ -203,3 +220,11 @@ func skip_text_printing():
   skip_text_printing = true
   text_timer_node.emit_signal("timeout")
   text_timer_node.stop()
+  
+func execute_current_choice():
+  var call_array = get_current_choice(current_choice).get("call")
+  
+  if call_array:
+    var call_method = call_array[0]
+    var call_args = call_array.slice(1, call_array.size())
+    callv(call_method, call_args)
