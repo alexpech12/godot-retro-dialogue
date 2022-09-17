@@ -1,7 +1,15 @@
 extends Control
 
-export var character_name = "ALEX"
-export var character_portrait: Texture
+export var characters = {
+  "alex": {
+    "name": "ALEX",
+    "portrait": preload("res://images/Pixel Portraits/female_10_t.png")
+  },
+  "jupiter": {
+    "name": "JUPITER",
+    "portrait": preload("res://images/Pixel Portraits/female_11_t.png")
+  }
+}
 
 onready var name_node = get_node("DialogueRect/CharacterName")
 onready var dialogue_node = get_node("DialogueRect/Dialogue")
@@ -13,6 +21,7 @@ onready var portrait_node = get_node("PortraitRect/Portrait")
 
 var conversation = [
   {
+    "character": "alex",
     "dialogue": "Hey there.\nDo you like apples?",
     "choices": [
       {
@@ -23,25 +32,37 @@ var conversation = [
         "dialogue": "No way, gross!",
         "destination": "apples_bad"
       }
-      ]
+    ]
   },
   {
+    "character": "alex",
     "label": "apples_good",
     "dialogue": "You like apples? Me too!",
     "destination": "part_2"
   },
   {
+    "character": "alex",
     "label": "apples_bad",
     "dialogue": "You don't?\nThat's a shame."
   },
   {
     "label": "part_2",
+    "character": "alex",
     "dialogue": "I like other fruits too."
   },
   {
+    "character": "alex",
+    "dialogue": "Hey JUPITER, what do you like?"
+  },
+  {
+    "character": "jupiter",
+    "dialogue": "I prefer oranges..."
+  },
+  {
+    "character": "alex",
     "dialogue": "Bananas are my favourite!"
   }
-  ]
+]
 
 var current_index = 0
 var current_choice = 0
@@ -49,9 +70,7 @@ var current_choice = 0
 func _ready():
   update_text_labels()
   update_select_indicators()
-  
-  portrait_node.texture = character_portrait
-  name_node.text = character_name
+  update_character()
 
 func _process(delta):
   if current_index < (conversation.size() - 1):
@@ -68,6 +87,7 @@ func _process(delta):
   
     if current_index != previous_index:
       update_text_labels()
+      update_character()
       reset_selection()
 
 func get_next_index():
@@ -131,3 +151,9 @@ func safe_select_next_choice():
 func reset_selection():
   current_choice = 0
   update_select_indicators()
+  
+func update_character():
+  var current_character = conversation[current_index].get("character")
+  
+  portrait_node.texture = characters[current_character]["portrait"]
+  name_node.text = characters[current_character]["name"]
