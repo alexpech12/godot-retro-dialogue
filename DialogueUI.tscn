@@ -64,14 +64,15 @@ __meta__ = {
 [node name="Dialogue" type="RichTextLabel" parent="DialogueRect"]
 margin_left = 6.0
 margin_top = 14.0
-margin_right = 185.0
-margin_bottom = 38.0
+margin_right = 181.0
+margin_bottom = 36.0
 theme = SubResource( 2 )
 bbcode_enabled = true
 bbcode_text = "...
 ..."
 text = "...
 ..."
+scroll_active = false
 
 [node name="ChoiceA" type="RichTextLabel" parent="DialogueRect"]
 margin_left = 14.0

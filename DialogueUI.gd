@@ -11,6 +11,9 @@ export var characters = {
   }
 }
 
+export var characters_per_line = 21
+export var max_lines_visible = 2
+
 onready var name_node = get_node("DialogueRect/CharacterName")
 onready var dialogue_node = get_node("DialogueRect/Dialogue")
 onready var choice_a_node = get_node("DialogueRect/ChoiceA")
@@ -83,6 +86,7 @@ var current_index = 0
 var current_choice = 0
 var text_in_progress = false
 var skip_text_printing = false
+var current_scroll_position = 0
 
 var title = "STRANGER"
 
@@ -203,9 +207,11 @@ func print_dialogue( dialogue ):
   update_character()
   hide_choices()
   
-  var formatted_dialogue = dialogue.format({ "title": title })
+  var formatted_dialogue = format_dialogue(dialogue)
   dialogue_node.bbcode_text = process_dialogue_inline_functions(formatted_dialogue)
   dialogue_node.visible_characters = 0
+  dialogue_node.scroll_to_line(0)
+  current_scroll_position = 0
 
   yield(get_tree(),"idle_frame")
   for i in dialogue_node.get_total_character_count():
@@ -253,6 +259,7 @@ func process_dialogue_inline_functions(dialogue):
   dialogue_calls = {}
   
   var visible_character_count = 0
+  var line_count = 1
   var in_bbcode = false
 
   var i = -1
@@ -278,6 +285,12 @@ func process_dialogue_inline_functions(dialogue):
         add_dialogue_call(visible_character_count, result.get_string("function_call").split(" "))
         dialogue.erase(result.get_start(), result.get_end() - result.get_start())
         i -= 1
+    # Perform manual scrolling.
+    # If this is a newline and we're above the maximum number of visible lines, insert a 'scroll' function
+    elif character == "\n":
+      line_count += 1
+      if line_count > max_lines_visible:
+        add_dialogue_call(visible_character_count, ["scroll"])
     else:
       visible_character_count += 1
 
@@ -298,3 +311,62 @@ func call_dialogue_functions(index):
       results.push_back(callv(call_method, dialogue_call))
     
   return results
+
+func format_dialogue(dialogue):
+  # Replace any variables in {} brackets with their values
+  var formatted_dialogue = dialogue.format(dialogue_variables())
+  
+  var characters_in_line_count = 0
+  var line_count = 1
+  var last_space_index = 0
+  var ignore_stack = []
+  # Everything between these brackets should be ignored.
+  # It's formatted in a dictionary so we can easily fetch the corresponding close bracket for an open bracket.
+  var ignore_bracket_pairs = { 
+    "[": "]", 
+    "<": ">" 
+  }
+
+  for i in formatted_dialogue.length():
+    var character = formatted_dialogue[i]
+    
+    # Ignore everything between [] or <> brackets.
+    # By using a stack, we can more easily support nested brackets, like [<>] or <[]>
+    if character in ignore_bracket_pairs.keys():
+      ignore_stack.push_back(character)
+      continue
+    elif character == ignore_bracket_pairs.get(ignore_stack.back()):
+      ignore_stack.pop_back()
+      continue
+    elif not ignore_stack.empty():
+      continue
+    
+    # Keep track of the last space we encounter. 
+    # This will be where we want to insert a newline if the line overflows.
+    if character == " ":
+      last_space_index = i
+      
+    # If we've encountered a newline that's been manually inserted into the string, reset our counter
+    if character == "\n":
+      characters_in_line_count = 0
+    elif characters_in_line_count > characters_per_line:
+      # This character has caused on overflow and we need to insert a newline.
+      # Insert it at the position of the last space so that we don't break up the work.
+      formatted_dialogue[last_space_index] = "\n"
+      # Since this word will now wrap, we'll be starting part way through the next line.
+      # Our new character count is going to be the amount of characters between the current position
+      # and the last space (where we inserted the newline)
+      characters_in_line_count = i - last_space_index
+    
+    characters_in_line_count += 1
+  
+  return formatted_dialogue
+
+func dialogue_variables():
+  return {
+    "title": title
+  }
+  
+func scroll():
+  current_scroll_position += 1
+  dialogue_node.scroll_to_line(current_scroll_position)
