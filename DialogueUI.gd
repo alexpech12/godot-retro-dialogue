@@ -23,7 +23,7 @@ onready var text_timer_node = get_node("TextTimer")
 var conversation = [
   {
     "character": "alex",
-    "dialogue": "Hi, I'm ALEX. How should I refer to you?",
+    "dialogue": "Hi, I'm ALEX. <pause 0.5>.<pause 0.5>.<pause 0.5>. [color=yellow]It's nice to meet you![/color] Uh...<pause 2.0> How should I refer to you?",
     "choices": [
       {
         "dialogue": "Call me FRIEND",
@@ -86,7 +86,11 @@ var skip_text_printing = false
 
 var title = "STRANGER"
 
+var inline_function_regex = RegEx.new()
+var dialogue_calls = {}
+
 func _ready():
+  inline_function_regex.compile("<(?<function_call>.+?)>")
   print_dialogue(conversation[current_index]["dialogue"])
 
 func _process(delta):
@@ -199,11 +203,21 @@ func print_dialogue( dialogue ):
   update_character()
   hide_choices()
   
-  dialogue_node.bbcode_text = dialogue.format({ "title": title })
+  var formatted_dialogue = dialogue.format({ "title": title })
+  dialogue_node.bbcode_text = process_dialogue_inline_functions(formatted_dialogue)
   dialogue_node.visible_characters = 0
 
   yield(get_tree(),"idle_frame")
   for i in dialogue_node.get_total_character_count():
+    # Process any function calls first, before showing the next character.
+    var results = call_dialogue_functions(i)
+    if results:
+      for result in results:
+        # This is what the function will return if it yields.
+        # If it does yield, we also need to yield here to wait until that coroutine completes.
+        if result is GDScriptFunctionState:
+            yield(result, "completed")
+            
     text_timer_node.start()
     dialogue_node.visible_characters += 1
     yield(text_timer_node, "timeout")
@@ -228,3 +242,59 @@ func execute_current_choice():
     var call_method = call_array[0]
     var call_args = call_array.slice(1, call_array.size())
     callv(call_method, call_args)
+
+func add_dialogue_call(index, dialogue_call):
+  var dialogue_calls_at_index = dialogue_calls.get(index, [])
+  dialogue_calls_at_index.push_back(dialogue_call) 
+  dialogue_calls[index] = dialogue_calls_at_index
+
+func process_dialogue_inline_functions(dialogue):
+  # Clear our existing function call list
+  dialogue_calls = {}
+  
+  var visible_character_count = 0
+  var in_bbcode = false
+
+  var i = -1
+  while i + 1 < dialogue.length():
+    i += 1
+    
+    var character = dialogue[i]
+    
+    # Ignore bbcode tag sections
+    if character == '[':
+      in_bbcode = true
+      continue
+    elif character == ']':
+      in_bbcode = false
+      continue
+    elif in_bbcode:
+      continue
+    
+    # If this is the start of an inline function call, process it and strip it from the dialogue
+    if character == '<':
+      var result = inline_function_regex.search(dialogue, i)
+      if result:
+        add_dialogue_call(visible_character_count, result.get_string("function_call").split(" "))
+        dialogue.erase(result.get_start(), result.get_end() - result.get_start())
+        i -= 1
+    else:
+      visible_character_count += 1
+
+  return dialogue
+  
+func pause(delay_string):
+  var delay = float(delay_string)
+  yield(get_tree().create_timer(delay), "timeout")
+  
+func call_dialogue_functions(index):
+  var dialogue_calls_for_index = dialogue_calls.get(index)
+  var results = []
+  if dialogue_calls_for_index:
+    for dialogue_call in dialogue_calls_for_index:
+      var call_method = dialogue_call[0]
+      dialogue_call.remove(0)
+
+      results.push_back(callv(call_method, dialogue_call))
+    
+  return results
