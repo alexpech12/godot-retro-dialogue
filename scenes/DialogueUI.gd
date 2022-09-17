@@ -1,5 +1,7 @@
 extends Control
 
+signal conversation_finished  
+
 export var characters = {
   "alex": {
     "name": "ALEX",
@@ -94,10 +96,19 @@ var inline_function_regex = RegEx.new()
 var dialogue_calls = {}
 
 func _ready():
+  visible = false
   inline_function_regex.compile("<(?<function_call>.+?)>")
+  
+func start_conversation():
+  current_index = 0
+  current_choice = 0
   print_dialogue(conversation[current_index]["dialogue"])
+  visible = true
 
 func _process(delta):
+  if not visible:
+    return
+    
   if text_in_progress:
     if Input.is_action_just_pressed("ui_accept"):
       start_fast_text_printing()
@@ -121,6 +132,9 @@ func _process(delta):
   
     if current_index != previous_index:
       print_dialogue(conversation[current_index]["dialogue"])
+  else:
+    if Input.is_action_just_pressed("ui_accept"):
+      finish_conversation()
 
 func get_next_index():
   var destination = null
@@ -386,3 +400,7 @@ func dialogue_variables():
 func scroll():
   current_scroll_position += 1
   dialogue_node.scroll_to_line(current_scroll_position)
+
+func finish_conversation():
+  visible = false
+  emit_signal("conversation_finished")

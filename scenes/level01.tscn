@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=2]
+[gd_scene load_steps=40 format=2]
 
 [ext_resource path="res://images/warped city files/ENVIRONMENT/background/buildings-bg.png" type="Texture" id=1]
 [ext_resource path="res://images/warped city files/ENVIRONMENT/tileset.png" type="Texture" id=2]
@@ -31,7 +31,11 @@
 [ext_resource path="res://images/cyberpunk city 2 files/Sprites/Player/Idle/Idle4.png" type="Texture" id=29]
 [ext_resource path="res://images/cyberpunk city 2 files/Sprites/Player/Idle/Idle2.png" type="Texture" id=30]
 [ext_resource path="res://images/cyberpunk city 2 files/Sprites/Player/Idle/Idle3.png" type="Texture" id=31]
+[ext_resource path="res://scenes/Player.gd" type="Script" id=32]
+[ext_resource path="res://images/Pixel Portraits/female_11_t.png" type="Texture" id=33]
 [ext_resource path="res://images/speech_bubble.png" type="Texture" id=34]
+[ext_resource path="res://images/Pixel Portraits/female_10_t.png" type="Texture" id=35]
+[ext_resource path="res://scenes/NPC.gd" type="Script" id=36]
 
 [sub_resource type="TileSet" id=1]
 0/name = "tileset.png 0"
@@ -523,9 +527,11 @@ texture = ExtResource( 6 )
 position = Vector2( 175, 105 )
 frames = SubResource( 3 )
 animation = "idle"
-frame = 1
+frame = 2
 playing = true
 flip_h = true
+script = ExtResource( 36 )
+player_path = NodePath("../Player")
 
 [node name="SpeechBubble" type="Sprite" parent="NPC"]
 position = Vector2( 15, -31 )
@@ -535,7 +541,20 @@ texture = ExtResource( 34 )
 position = Vector2( 36, 111 )
 frames = SubResource( 2 )
 animation = "idle"
-frame = 1
 playing = true
+script = ExtResource( 32 )
+ui_path = NodePath("../UI")
 
 [node name="UI" parent="." instance=ExtResource( 5 )]
+characters = {
+"alex": {
+"name": "ALEX",
+"portrait": ExtResource( 35 )
+},
+"jupiter": {
+"name": "JUPITER",
+"portrait": ExtResource( 33 )
+}
+}
+
+[connection signal="conversation_finished" from="UI" to="Player" method="_on_UI_conversation_finished"]
