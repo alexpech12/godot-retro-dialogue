@@ -221,10 +221,21 @@ func print_dialogue( dialogue ):
     var results = call_dialogue_functions(i)
     if results:
       for result in results:
+        if not result:
+          continue
+          
+        var dialogue_function = result[0]
+        var result_value = result[1]
+          
         # This is what the function will return if it yields.
-        # If it does yield, we also need to yield here to wait until that coroutine completes.
-        if result is GDScriptFunctionState:
-            yield(result, "completed")
+        if result_value is GDScriptFunctionState:
+          # If we're trying to skip quickly through the text, complete this function immediately if we're allowed to do so.
+          if fast_text_printing and dialogue_function in skippable_functions:
+            while result_value is GDScriptFunctionState and result_value.is_valid():
+              result_value = result_value.resume()
+          else:
+            # Otherwise, if the function has yielded, we need to yield here also to wait until that coroutine completes.
+            yield(result_value, "completed")
 
     if fast_text_printing:
       dialogue_node.visible_characters += 1
@@ -303,6 +314,8 @@ func pause(delay_string):
   var delay = float(delay_string)
   yield(get_tree().create_timer(delay), "timeout")
   
+var skippable_functions = ["pause"]
+
 func call_dialogue_functions(index):
   var dialogue_calls_for_index = dialogue_calls.get(index)
   var results = []
@@ -311,7 +324,7 @@ func call_dialogue_functions(index):
       var call_method = dialogue_call[0]
       dialogue_call.remove(0)
 
-      results.push_back(callv(call_method, dialogue_call))
+      results.push_back([call_method, callv(call_method, dialogue_call)])
     
   return results
 
