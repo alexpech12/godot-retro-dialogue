@@ -1,11 +1,15 @@
 extends Control
 
+export var character_name = "ALEX"
+export var character_portrait: Texture
+
 onready var name_node = get_node("DialogueRect/CharacterName")
 onready var dialogue_node = get_node("DialogueRect/Dialogue")
 onready var choice_a_node = get_node("DialogueRect/ChoiceA")
 onready var choice_b_node = get_node("DialogueRect/ChoiceB")
 onready var select_a_node = get_node("DialogueRect/SelectA")
 onready var select_b_node = get_node("DialogueRect/SelectB")
+onready var portrait_node = get_node("PortraitRect/Portrait")
 
 var conversation = [
   {
@@ -45,6 +49,9 @@ var current_choice = 0
 func _ready():
   update_text_labels()
   update_select_indicators()
+  
+  portrait_node.texture = character_portrait
+  name_node.text = character_name
 
 func _process(delta):
   if current_index < (conversation.size() - 1):
