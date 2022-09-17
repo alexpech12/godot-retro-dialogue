@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/hurt.ogg-3d42f037322ee4be14f75c29ee49cc6c.oggstr"
+
+[deps]
+
+source_file="res://images/warped city files/demo/assets/sounds/hurt.ogg"
+dest_files=[ "res://.import/hurt.ogg-3d42f037322ee4be14f75c29ee49cc6c.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

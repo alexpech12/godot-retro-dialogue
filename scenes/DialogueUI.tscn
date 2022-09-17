@@ -1,0 +1,133 @@
+[gd_scene load_steps=8 format=2]
+
+[ext_resource path="res://zx_spectrum_7/zx_spectrum-7.ttf" type="DynamicFontData" id=1]
+[ext_resource path="res://images/ui_border.png" type="Texture" id=2]
+[ext_resource path="res://images/Pixel Portraits/female_10_t.png" type="Texture" id=3]
+[ext_resource path="res://zx_spectrum.tres" type="DynamicFont" id=4]
+[ext_resource path="res://scenes/DialogueUI.gd" type="Script" id=5]
+
+[sub_resource type="DynamicFont" id=1]
+size = 10
+font_data = ExtResource( 1 )
+
+[sub_resource type="Theme" id=2]
+default_font = SubResource( 1 )
+
+[node name="DialogueUI" type="Control"]
+script = ExtResource( 5 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="PortraitRect" type="NinePatchRect" parent="."]
+margin_top = 160.0
+margin_right = 64.0
+margin_bottom = 224.0
+texture = ExtResource( 2 )
+patch_margin_left = 8
+patch_margin_top = 8
+patch_margin_right = 8
+patch_margin_bottom = 8
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Portrait" type="Sprite" parent="PortraitRect"]
+position = Vector2( 32, 32 )
+scale = Vector2( 2, 2 )
+texture = ExtResource( 3 )
+
+[node name="DialogueRect" type="NinePatchRect" parent="."]
+margin_left = 64.0
+margin_top = 160.0
+margin_right = 256.0
+margin_bottom = 224.0
+texture = ExtResource( 2 )
+patch_margin_left = 8
+patch_margin_top = 8
+patch_margin_right = 8
+patch_margin_bottom = 8
+
+[node name="CharacterName" type="RichTextLabel" parent="DialogueRect"]
+margin_left = 6.0
+margin_top = 4.0
+margin_right = 190.0
+margin_bottom = 26.0
+custom_fonts/normal_font = ExtResource( 4 )
+bbcode_enabled = true
+bbcode_text = "ANONYMOUS"
+text = "ANONYMOUS"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Dialogue" type="RichTextLabel" parent="DialogueRect"]
+margin_left = 6.0
+margin_top = 14.0
+margin_right = 181.0
+margin_bottom = 36.0
+theme = SubResource( 2 )
+bbcode_enabled = true
+bbcode_text = "...
+..."
+text = "...
+..."
+scroll_active = false
+
+[node name="ChoiceA" type="RichTextLabel" parent="DialogueRect"]
+margin_left = 14.0
+margin_top = 38.0
+margin_right = 194.0
+margin_bottom = 53.0
+rect_pivot_offset = Vector2( 20, 4 )
+theme = SubResource( 2 )
+bbcode_enabled = true
+bbcode_text = "Yes?"
+text = "Yes?"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ChoiceB" type="RichTextLabel" parent="DialogueRect"]
+margin_left = 14.0
+margin_top = 50.0
+margin_right = 194.0
+margin_bottom = 65.0
+theme = SubResource( 2 )
+bbcode_enabled = true
+bbcode_text = "No."
+text = "No."
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="SelectA" type="RichTextLabel" parent="DialogueRect"]
+margin_left = 5.0
+margin_top = 38.0
+margin_right = 19.0
+margin_bottom = 52.0
+rect_pivot_offset = Vector2( 20, 4 )
+theme = SubResource( 2 )
+bbcode_enabled = true
+bbcode_text = ">"
+text = ">"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="SelectB" type="RichTextLabel" parent="DialogueRect"]
+margin_left = 5.0
+margin_top = 49.0
+margin_right = 19.0
+margin_bottom = 64.0
+rect_pivot_offset = Vector2( 20, 4 )
+theme = SubResource( 2 )
+bbcode_enabled = true
+bbcode_text = ">"
+text = ">"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TextTimer" type="Timer" parent="."]
+wait_time = 0.1
