@@ -23,14 +23,14 @@ onready var text_timer_node = get_node("TextTimer")
 var conversation = [
   {
     "character": "alex",
-    "dialogue": "Hey there.\nDo you like apples?",
+    "dialogue": "Hey there.\nDo you like [wave amp=10 freq=-10][color=green]apples[/color][/wave]?",
     "choices": [
       {
-        "dialogue": "Sure do!",
+        "dialogue": "[wave amp=10 freq=10]Sure do![/wave]",
         "destination": "apples_good"
       },
       {
-        "dialogue": "No way, gross!",
+        "dialogue": "No way, [color=grey][shake rate=10 level=10]gross![/shake][/color]",
         "destination": "apples_bad"
       }
     ]
@@ -156,13 +156,13 @@ func update_character():
   var current_character = conversation[current_index].get("character")
   
   portrait_node.texture = characters[current_character]["portrait"]
-  name_node.text = characters[current_character]["name"]
+  name_node.bbcode_text = characters[current_character]["name"]
   
 func show_choices():
   set_choices_visible(true)
   reset_selection()
-  choice_a_node.text = get_current_choice(0).get("dialogue", "...")
-  choice_b_node.text = get_current_choice(1).get("dialogue", "")
+  choice_a_node.bbcode_text = get_current_choice(0).get("dialogue", "...")
+  choice_b_node.bbcode_text = get_current_choice(1).get("dialogue", "")
   
 func hide_choices():
   set_choices_visible(false)
@@ -181,16 +181,19 @@ func print_dialogue( dialogue ):
   text_in_progress = true
   update_character()
   hide_choices()
-  dialogue_node.text = ""
   
-  for letter in dialogue:
+  dialogue_node.bbcode_text = dialogue
+  dialogue_node.visible_characters = 0
+
+  yield(get_tree(),"idle_frame")
+  for i in dialogue_node.get_total_character_count():
     text_timer_node.start()
-    dialogue_node.add_text(letter)
+    dialogue_node.visible_characters += 1
     yield(text_timer_node, "timeout")
-    
+
     if skip_text_printing:
       skip_text_printing = false
-      dialogue_node.text = dialogue
+      dialogue_node.visible_characters = -1
       break
 
   show_choices()
