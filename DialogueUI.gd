@@ -68,12 +68,16 @@ var conversation = [
 var current_index = 0
 var current_choice = 0
 var text_in_progress = false
+var skip_text_printing = false
 
 func _ready():
   print_dialogue(conversation[current_index]["dialogue"])
 
 func _process(delta):
   if text_in_progress:
+    if Input.is_action_just_pressed("ui_accept"):
+      skip_text_printing()
+    
     return
   
   if current_index < (conversation.size() - 1):
@@ -183,6 +187,16 @@ func print_dialogue( dialogue ):
     text_timer_node.start()
     dialogue_node.add_text(letter)
     yield(text_timer_node, "timeout")
+    
+    if skip_text_printing:
+      skip_text_printing = false
+      dialogue_node.text = dialogue
+      break
 
   show_choices()
   text_in_progress = false
+  
+func skip_text_printing():
+  skip_text_printing = true
+  text_timer_node.emit_signal("timeout")
+  text_timer_node.stop()
