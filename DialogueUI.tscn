@@ -114,3 +114,6 @@ text = ">"
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="TextTimer" type="Timer" parent="."]
+wait_time = 0.1

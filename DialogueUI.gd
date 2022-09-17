@@ -18,6 +18,7 @@ onready var choice_b_node = get_node("DialogueRect/ChoiceB")
 onready var select_a_node = get_node("DialogueRect/SelectA")
 onready var select_b_node = get_node("DialogueRect/SelectB")
 onready var portrait_node = get_node("PortraitRect/Portrait")
+onready var text_timer_node = get_node("TextTimer")
 
 var conversation = [
   {
@@ -66,13 +67,15 @@ var conversation = [
 
 var current_index = 0
 var current_choice = 0
+var text_in_progress = false
 
 func _ready():
-  update_text_labels()
-  update_select_indicators()
-  update_character()
+  print_dialogue(conversation[current_index]["dialogue"])
 
 func _process(delta):
+  if text_in_progress:
+    return
+  
   if current_index < (conversation.size() - 1):
     var previous_index = current_index
     
@@ -86,9 +89,7 @@ func _process(delta):
       current_index = get_next_index()
   
     if current_index != previous_index:
-      update_text_labels()
-      update_character()
-      reset_selection()
+      print_dialogue(conversation[current_index]["dialogue"])
 
 func get_next_index():
   var destination = null
@@ -116,12 +117,7 @@ func get_current_choice(choice_index):
     return choices[choice_index]
   else:
     return {}
-    
-func update_text_labels():
-  name_node.text = "ALEX"
-  dialogue_node.text = conversation[current_index]["dialogue"]
-  choice_a_node.text = get_current_choice(0).get("dialogue", "...")
-  choice_b_node.text = get_current_choice(1).get("dialogue", "")
+
   
 func update_select_indicators():
   var select_nodes = [
@@ -157,3 +153,36 @@ func update_character():
   
   portrait_node.texture = characters[current_character]["portrait"]
   name_node.text = characters[current_character]["name"]
+  
+func show_choices():
+  set_choices_visible(true)
+  reset_selection()
+  choice_a_node.text = get_current_choice(0).get("dialogue", "...")
+  choice_b_node.text = get_current_choice(1).get("dialogue", "")
+  
+func hide_choices():
+  set_choices_visible(false)
+  
+func set_choices_visible(visible):
+  var nodes = [
+    select_a_node,
+    select_b_node,
+    choice_a_node,
+    choice_b_node
+  ]
+  for node in nodes:
+    node.visible = visible
+
+func print_dialogue( dialogue ):
+  text_in_progress = true
+  update_character()
+  hide_choices()
+  dialogue_node.text = ""
+  
+  for letter in dialogue:
+    text_timer_node.start()
+    dialogue_node.add_text(letter)
+    yield(text_timer_node, "timeout")
+
+  show_choices()
+  text_in_progress = false
