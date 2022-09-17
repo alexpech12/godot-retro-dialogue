@@ -85,7 +85,7 @@ var conversation = [
 var current_index = 0
 var current_choice = 0
 var text_in_progress = false
-var skip_text_printing = false
+var fast_text_printing = false
 var current_scroll_position = 0
 
 var title = "STRANGER"
@@ -100,8 +100,10 @@ func _ready():
 func _process(delta):
   if text_in_progress:
     if Input.is_action_just_pressed("ui_accept"):
-      skip_text_printing()
-    
+      start_fast_text_printing()
+    elif Input.is_action_just_released("ui_accept"):
+      stop_fast_text_printing()
+      
     return
   
   if current_index < (conversation.size() - 1):
@@ -223,23 +225,24 @@ func print_dialogue( dialogue ):
         # If it does yield, we also need to yield here to wait until that coroutine completes.
         if result is GDScriptFunctionState:
             yield(result, "completed")
-            
-    text_timer_node.start()
-    dialogue_node.visible_characters += 1
-    yield(text_timer_node, "timeout")
 
-    if skip_text_printing:
-      skip_text_printing = false
-      dialogue_node.visible_characters = -1
-      break
+    if fast_text_printing:
+      dialogue_node.visible_characters += 1
+      yield(get_tree(),"idle_frame")
+    else:
+      text_timer_node.start()
+      dialogue_node.visible_characters += 1
+      yield(text_timer_node, "timeout")
 
   show_choices()
   text_in_progress = false
   
-func skip_text_printing():
-  skip_text_printing = true
+func start_fast_text_printing():
+  fast_text_printing = true
   text_timer_node.emit_signal("timeout")
-  text_timer_node.stop()
+  
+func stop_fast_text_printing():
+  fast_text_printing = false
   
 func execute_current_choice():
   var call_array = get_current_choice(current_choice).get("call")
