@@ -22,10 +22,10 @@ func _process(delta):
   else:
     play("idle")
 
-func npc_in_range():
+func npc_in_range(npc):
   if not in_conversation and Input.is_action_just_pressed("ui_accept"):
     in_conversation = true
-    ui.start_conversation()
+    ui.start_conversation(npc.conversation)
 
 func _on_UI_conversation_finished():
   in_conversation = false

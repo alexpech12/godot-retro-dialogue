@@ -1,17 +1,6 @@
 extends Control
 
-signal conversation_finished  
-
-export var characters = {
-  "alex": {
-    "name": "ALEX",
-    "portrait": preload("res://images/Pixel Portraits/female_10_t.png")
-  },
-  "jupiter": {
-    "name": "JUPITER",
-    "portrait": preload("res://images/Pixel Portraits/female_11_t.png")
-  }
-}
+signal conversation_finished
 
 export var characters_per_line = 21
 export var max_lines_visible = 2
@@ -25,72 +14,13 @@ onready var select_b_node = get_node("DialogueRect/SelectB")
 onready var portrait_node = get_node("PortraitRect/Portrait")
 onready var text_timer_node = get_node("TextTimer")
 
-var conversation = [
-  {
-    "character": "alex",
-    "dialogue": "Hi, I'm ALEX. <pause 0.5>.<pause 0.5>.<pause 0.5>. [color=yellow]It's nice to meet you![/color] Uh...<pause 2.0> How should I refer to you?",
-    "choices": [
-      {
-        "dialogue": "Call me FRIEND",
-        "call": ["set", "title", "FRIEND"]
-      },
-      {
-        "dialogue": "It's CAPTAIN to you",
-        "call": ["set", "title", "CAPTAIN"]
-      }
-    ]
-  },
-  {
-    "character": "alex",
-    "dialogue": "Hey {title}.\nDo you like [wave amp=10 freq=-10][color=green]apples[/color][/wave]?",
-    "choices": [
-      {
-        "dialogue": "[wave amp=10 freq=10]Sure do![/wave]",
-        "destination": "apples_good"
-      },
-      {
-        "dialogue": "No way, [color=grey][shake rate=10 level=10]gross![/shake][/color]",
-        "destination": "apples_bad"
-      }
-    ]
-  },
-  {
-    "character": "alex",
-    "label": "apples_good",
-    "dialogue": "You like apples? Me too!",
-    "destination": "part_2"
-  },
-  {
-    "character": "alex",
-    "label": "apples_bad",
-    "dialogue": "You don't?\nThat's a shame."
-  },
-  {
-    "label": "part_2",
-    "character": "alex",
-    "dialogue": "I like other fruits too."
-  },
-  {
-    "character": "alex",
-    "dialogue": "Hey JUPITER, what do you like?"
-  },
-  {
-    "character": "jupiter",
-    "dialogue": "I prefer oranges..."
-  },
-  {
-    "character": "alex",
-    "dialogue": "Bananas are my favourite!"
-  }
-]
+var conversation_node: Conversation
 
 var current_index = 0
 var current_choice = 0
 var text_in_progress = false
 var fast_text_printing = false
 var current_scroll_position = 0
-
-var title = "STRANGER"
 
 var inline_function_regex = RegEx.new()
 var dialogue_calls = {}
@@ -99,10 +29,11 @@ func _ready():
   visible = false
   inline_function_regex.compile("<(?<function_call>.+?)>")
   
-func start_conversation():
+func start_conversation(resource):
+  conversation_node = resource
   current_index = 0
   current_choice = 0
-  print_dialogue(conversation[current_index]["dialogue"])
+  print_dialogue(conversation_node.conversation[current_index]["dialogue"])
   visible = true
 
 func _process(delta):
@@ -117,7 +48,7 @@ func _process(delta):
       
     return
   
-  if current_index < (conversation.size() - 1):
+  if current_index < (conversation_node.conversation.size() - 1):
     var previous_index = current_index
     
     if Input.is_action_just_pressed("ui_up"):
@@ -131,18 +62,18 @@ func _process(delta):
       current_index = get_next_index()
   
     if current_index != previous_index:
-      print_dialogue(conversation[current_index]["dialogue"])
+      print_dialogue(conversation_node.conversation[current_index]["dialogue"])
   else:
     if Input.is_action_just_pressed("ui_accept"):
       finish_conversation()
 
 func get_next_index():
   var destination = null
-  if conversation[current_index].has("choices"):
-    var choice = conversation[current_index]["choices"][current_choice]
+  if conversation_node.conversation[current_index].has("choices"):
+    var choice = conversation_node.conversation[current_index]["choices"][current_choice]
     destination = choice.get("destination")
   else:
-    destination = conversation[current_index].get("destination")
+    destination = conversation_node.conversation[current_index].get("destination")
     
   if destination:
     return get_index_of_label(destination)
@@ -150,14 +81,14 @@ func get_next_index():
     return current_index + 1
 
 func get_index_of_label(label):
-  for i in range(conversation.size()):
-    if conversation[i].get("label") == label:
+  for i in range(conversation_node.conversation.size()):
+    if conversation_node.conversation[i].get("label") == label:
       return i
   
   assert(false, "Label %s does not exist in this conversation!" % label)
   
 func get_current_choice(choice_index):
-  var choices = conversation[current_index].get("choices", [])
+  var choices = conversation_node.conversation[current_index].get("choices", [])
   if choice_index < choices.size():
     return choices[choice_index]
   else:
@@ -175,7 +106,7 @@ func update_select_indicators():
   select_nodes[current_choice].visible = true
   
 func get_current_choice_count():
-  var choices = conversation[current_index].get("choices")
+  var choices = conversation_node.conversation[current_index].get("choices")
   if choices:
     return choices.size()
   else:
@@ -194,10 +125,10 @@ func reset_selection():
   update_select_indicators()
   
 func update_character():
-  var current_character = conversation[current_index].get("character")
+  var current_character = conversation_node.conversation[current_index].get("character")
   
-  portrait_node.texture = characters[current_character]["portrait"]
-  name_node.bbcode_text = characters[current_character]["name"]
+  portrait_node.texture = conversation_node.characters[current_character]["portrait"]
+  name_node.bbcode_text = conversation_node.characters[current_character]["name"]
   
 func show_choices():
   set_choices_visible(true)
@@ -274,8 +205,9 @@ func execute_current_choice():
   
   if call_array:
     var call_method = call_array[0]
+    var call_object = conversation_node if conversation_node.has_method(call_method) else self
     var call_args = call_array.slice(1, call_array.size())
-    callv(call_method, call_args)
+    call_object.callv(call_method, call_args)
 
 func add_dialogue_call(index, dialogue_call):
   var dialogue_calls_at_index = dialogue_calls.get(index, [])
@@ -337,14 +269,16 @@ func call_dialogue_functions(index):
     for dialogue_call in dialogue_calls_for_index:
       var call_method = dialogue_call[0]
       dialogue_call.remove(0)
+      
+      var call_object = conversation_node if conversation_node.has_method(call_method) else self
 
-      results.push_back([call_method, callv(call_method, dialogue_call)])
+      results.push_back([call_method, call_object.callv(call_method, dialogue_call)])
     
   return results
 
 func format_dialogue(dialogue):
   # Replace any variables in {} brackets with their values
-  var formatted_dialogue = dialogue.format(dialogue_variables())
+  var formatted_dialogue = dialogue.format(conversation_node.dialogue_variables())
   
   var characters_in_line_count = 0
   var line_count = 1
@@ -391,11 +325,6 @@ func format_dialogue(dialogue):
     characters_in_line_count += 1
   
   return formatted_dialogue
-
-func dialogue_variables():
-  return {
-    "title": title
-  }
   
 func scroll():
   current_scroll_position += 1
